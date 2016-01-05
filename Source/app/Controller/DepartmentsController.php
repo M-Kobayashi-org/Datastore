@@ -88,11 +88,21 @@ class DepartmentsController extends AppController {
 			throw new NotFoundException(__('Invalid department'));
 		}
 		if ($this->request->is(array('post', 'put'))) {
-			if ($this->Department->save($this->request->data)) {
+			try {
+				$this->Department->set('updater', 9999);
+				if (!$this->Department->save($this->request->data)) {
+					throw new Exception(
+							sprintf(
+									__('The department could not be saved. Please, try again. Error: %s'),
+									(!empty($this->Department->validationErrors)) ? var_export($this->Department->validationErrors, true) : $this->Department->lastError()
+									)
+							);
+				}
 				$this->Flash->success(__('The department has been saved.'));
 				return $this->redirect(array('action' => 'index'));
-			} else {
-				$this->Flash->error(__('The department could not be saved. Please, try again.'));
+			}
+			catch (Exception $e) {
+				$this->Flash->error($e->getMessage());
 			}
 		} else {
 			$options = array('conditions' => array('Department.' . $this->Department->primaryKey => $id));
