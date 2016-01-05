@@ -19,7 +19,7 @@
  * @license       http://www.opensource.org/licenses/mit-license.php MIT License
  */
 
-App::uses('Model', 'Model');
+App::uses('DataObject', 'Model');
 
 /**
  * Application model for Cake.
@@ -29,5 +29,5 @@ App::uses('Model', 'Model');
  *
  * @package       app.Model
  */
-class AppModel extends Model {
+class AppModel extends DataObject {
 }
