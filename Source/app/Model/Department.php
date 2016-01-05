@@ -50,4 +50,23 @@ class Department extends AppModel {
 			),
 		),
 	);
+
+/**
+ * hasMany associations
+ *
+ * @var array
+ */
+	public $hasMany = array(
+			'Employee' => array(
+					'className' => 'Employee',
+					'foreignKey' => 'department_no',
+//					'conditions' => array('Employee.department_no' => 'Employee.department_no'),
+					'order' => 'Employee.department_no ASC',
+//					'limit' => '',
+//					'offset' => '',
+//					'dependent' => false,
+//					'exclusive' => false,
+//					'finderQuery' => '',
+			),
+	);
 }

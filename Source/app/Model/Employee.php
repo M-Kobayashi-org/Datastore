@@ -70,4 +70,22 @@ class Employee extends AppModel {
 			),
 		),
 	);
+
+/**
+ * belongsTo  associations
+ *
+ * @var array
+ */
+	public $belongsTo = array(
+			'Department' => array(
+					'className' => 'Department',
+					'foreignKey' => 'department_no',
+//					'conditions' => '',
+//					'type' => 'INNER',
+//					'fields' => array(),
+//					'order' => array(),
+//					'counterCache' => false,
+//					'counterScope' => '',
+			),
+	);
 }
