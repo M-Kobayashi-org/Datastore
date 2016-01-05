@@ -24,9 +24,9 @@
 		<td><?php echo h($department['Department']['updated']); ?>&nbsp;</td>
 		<td><?php echo h($department['Department']['updater']); ?>&nbsp;</td>
 		<td class="actions">
-			<?php echo $this->Html->link(__('View'), array('action' => 'view', $department['Department']['id'])); ?>
-			<?php echo $this->Html->link(__('Edit'), array('action' => 'edit', $department['Department']['id'])); ?>
-			<?php echo $this->Form->postLink(__('Delete'), array('action' => 'delete', $department['Department']['id']), array('confirm' => __('Are you sure you want to delete # %s?', $department['Department']['id']))); ?>
+			<?php echo $this->Html->link(__('View'), array('action' => 'view', $department['Department']['department_no'])); ?>
+			<?php echo $this->Html->link(__('Edit'), array('action' => 'edit', $department['Department']['department_no'])); ?>
+			<?php echo $this->Form->postLink(__('Delete'), array('action' => 'delete', $department['Department']['department_no']), array('confirm' => __('Are you sure you want to delete # %s?', $department['Department']['department_no']))); ?>
 		</td>
 	</tr>
 <?php endforeach; ?>
