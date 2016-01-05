@@ -24,11 +24,11 @@
 		<td><?php echo h($employee['Employee']['employee_no']); ?>&nbsp;</td>
 		<td><?php echo h($employee['Employee']['employyee_name']); ?>&nbsp;</td>
 		<td><?php echo h($employee['Employee']['job']); ?>&nbsp;</td>
-		<td><?php echo h($employee['Employee']['manager']); ?>&nbsp;</td>
+		<td><?php echo h($employee['Parent']['employyee_name']); ?>&nbsp;</td>
 		<td><?php echo h($employee['Employee']['hiring_date']); ?>&nbsp;</td>
 		<td><?php echo h($employee['Employee']['salary']); ?>&nbsp;</td>
 		<td><?php echo h($employee['Employee']['commission']); ?>&nbsp;</td>
-		<td><?php echo h($employee['Employee']['department_no']); ?>&nbsp;</td>
+		<td><?php echo h($employee['Department']['department_name']); ?>&nbsp;</td>
 		<td><?php echo h($employee['Employee']['created']); ?>&nbsp;</td>
 		<td><?php echo h($employee['Employee']['creator']); ?>&nbsp;</td>
 		<td><?php echo h($employee['Employee']['updated']); ?>&nbsp;</td>

@@ -18,7 +18,7 @@
 		</dd>
 		<dt><?php echo __('Manager'); ?></dt>
 		<dd>
-			<?php echo h($employee['Employee']['manager']); ?>
+			<?php echo h($employee['Parent']['employyee_name']); ?>
 			&nbsp;
 		</dd>
 		<dt><?php echo __('Hiring Date'); ?></dt>
@@ -38,7 +38,7 @@
 		</dd>
 		<dt><?php echo __('Department No'); ?></dt>
 		<dd>
-			<?php echo h($employee['Employee']['department_no']); ?>
+			<?php echo h($employee['Department']['department_name']); ?>
 			&nbsp;
 		</dd>
 		<dt><?php echo __('Created'); ?></dt>

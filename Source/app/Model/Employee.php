@@ -71,6 +71,25 @@ class Employee extends AppModel {
 		),
 	);
 
+	/**
+	 * hasMany associations
+	 *
+	 * @var array
+	 */
+	public $hasMany = array(
+			'Employee' => array(
+					'className' => 'Employee',
+					'foreignKey' => 'manager',
+//					'conditions' => array(),
+					'order' => 'Employee.department_no ASC',
+//					'limit' => '',
+//					'offset' => '',
+//					'dependent' => false,
+//					'exclusive' => false,
+//					'finderQuery' => '',
+			),
+	);
+
 /**
  * belongsTo  associations
  *
@@ -80,6 +99,16 @@ class Employee extends AppModel {
 			'Department' => array(
 					'className' => 'Department',
 					'foreignKey' => 'department_no',
+//					'conditions' => '',
+//					'type' => 'INNER',
+//					'fields' => array(),
+//					'order' => array(),
+//					'counterCache' => false,
+//					'counterScope' => '',
+			),
+			'Parent' => array(
+					'className' => 'Employee',
+					'foreignKey' => 'manager',
 //					'conditions' => '',
 //					'type' => 'INNER',
 //					'fields' => array(),
