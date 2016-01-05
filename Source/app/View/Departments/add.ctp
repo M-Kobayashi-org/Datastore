@@ -3,11 +3,8 @@
 	<fieldset>
 		<legend><?php echo __('Add Department'); ?></legend>
 	<?php
-		echo $this->Form->input('department_no');
 		echo $this->Form->input('department_name');
 		echo $this->Form->input('location');
-		echo $this->Form->input('creator');
-		echo $this->Form->input('updater');
 	?>
 	</fieldset>
 <?php echo $this->Form->end(__('Submit')); ?>

@@ -47,12 +47,31 @@ class DepartmentsController extends AppController {
  */
 	public function add() {
 		if ($this->request->is('post')) {
-			$this->Department->create();
-			if ($this->Department->save($this->request->data)) {
+			try {
+				$this->Department->create();
+				$lastNo = $this->Department->find('first', array(
+							'fields' => array('Department.department_no'),
+							'order' => array('Department.department_no' => 'DESC'),
+							'recursive' => -1,
+						));
+				if (!$lastNo)
+					$lastNo = array('Department' => array('department_no' => 0));
+				$this->Department->set('department_no', $lastNo['Department']['department_no'] + 10);
+				$this->Department->set('creator', 9999);
+				$this->Department->set('updated', false);
+				if (!$this->Department->save($this->request->data)) {
+					throw new Exception(
+						sprintf(
+							__('The department could not be saved. Please, try again. Error: %s'),
+							(!empty($this->Department->validationErrors)) ? var_export($this->Department->validationErrors, true) : $this->Department->lastError()
+						)
+					);
+				}
 				$this->Flash->success(__('The department has been saved.'));
 				return $this->redirect(array('action' => 'index'));
-			} else {
-				$this->Flash->error(__('The department could not be saved. Please, try again.'));
+			}
+			catch (Exception $e) {
+				$this->Flash->error($e->getMessage());
 			}
 		}
 	}
