@@ -34,9 +34,9 @@
 		<td><?php echo h($employee['Employee']['updated']); ?>&nbsp;</td>
 		<td><?php echo h($employee['Employee']['updater']); ?>&nbsp;</td>
 		<td class="actions">
-			<?php echo $this->Html->link(__('View'), array('action' => 'view', $employee['Employee']['id'])); ?>
-			<?php echo $this->Html->link(__('Edit'), array('action' => 'edit', $employee['Employee']['id'])); ?>
-			<?php echo $this->Form->postLink(__('Delete'), array('action' => 'delete', $employee['Employee']['id']), array('confirm' => __('Are you sure you want to delete # %s?', $employee['Employee']['id']))); ?>
+			<?php echo $this->Html->link(__('View'), array('action' => 'view', $employee['Employee']['employee_no'])); ?>
+			<?php echo $this->Html->link(__('Edit'), array('action' => 'edit', $employee['Employee']['employee_no'])); ?>
+			<?php echo $this->Form->postLink(__('Delete'), array('action' => 'delete', $employee['Employee']['employee_no']), array('confirm' => __('Are you sure you want to delete # %s?', $employee['Employee']['employee_no']))); ?>
 		</td>
 	</tr>
 <?php endforeach; ?>
