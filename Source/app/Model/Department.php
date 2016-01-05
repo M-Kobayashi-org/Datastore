@@ -7,6 +7,13 @@ App::uses('AppModel', 'Model');
 class Department extends AppModel {
 
 /**
+ * Primary key
+ *
+ * @var string
+ */
+	public $primaryKey = 'department_no';
+
+/**
  * Validation rules
  *
  * @var array

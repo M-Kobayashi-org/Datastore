@@ -7,6 +7,13 @@ App::uses('AppModel', 'Model');
 class Employee extends AppModel {
 
 /**
+ * Primary key
+ *
+ * @var string
+ */
+	public $primaryKey = 'employee_no';
+
+/**
  * Validation rules
  *
  * @var array
