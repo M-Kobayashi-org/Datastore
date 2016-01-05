@@ -3,16 +3,19 @@
 	<fieldset>
 		<legend><?php echo __('Add Employee'); ?></legend>
 	<?php
-		echo $this->Form->input('employee_no');
 		echo $this->Form->input('employyee_name');
 		echo $this->Form->input('job');
-		echo $this->Form->input('manager');
+		echo $this->Form->input('manager', array(
+			'options' => $managers,
+			'empty' => __('choose one'),
+		));
 		echo $this->Form->input('hiring_date');
 		echo $this->Form->input('salary');
 		echo $this->Form->input('commission');
-		echo $this->Form->input('department_no');
-		echo $this->Form->input('creator');
-		echo $this->Form->input('updater');
+		echo $this->Form->input('department_no',array(
+			'options' => $departments,
+			'empty' => __('choose one'),
+		));
 	?>
 	</fieldset>
 <?php echo $this->Form->end(__('Submit')); ?>

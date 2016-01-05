@@ -15,6 +15,8 @@ class EmployeesController extends AppController {
  */
 	public $components = array('Paginator');
 
+	public $uses = array('Employee', 'Department');
+
 /**
  * index method
  *
@@ -47,14 +49,42 @@ class EmployeesController extends AppController {
  */
 	public function add() {
 		if ($this->request->is('post')) {
-			$this->Employee->create();
-			if ($this->Employee->save($this->request->data)) {
+			try {
+				$this->Employee->create();
+				$lastNo = $this->Employee->find('first', array(
+							'fields' => array('Employee.employee_no'),
+							'order' => array('Employee.employee_no' => 'DESC'),
+							'recursive' => -1,
+						));
+				if (!$lastNo)
+					$lastNo = array('Employee' => array('employee_no' => 0));
+				$this->Employee->set('employee_no', $lastNo['Employee']['employee_no'] + 10);
+				$this->Employee->set('creator', 9999);
+				$this->Employee->set('updated', false);
+				if (!$this->Employee->save($this->request->data)) {
+					throw new Exception(
+							sprintf(
+									__('The employee could not be saved. Please, try again. Error: %s'),
+									(!empty($this->Employee->validationErrors)) ? var_export($this->Employee->validationErrors, true) : $this->Employee->lastError()
+									)
+							);
+				}
 				$this->Flash->success(__('The employee has been saved.'));
 				return $this->redirect(array('action' => 'index'));
-			} else {
-				$this->Flash->error(__('The employee could not be saved. Please, try again.'));
+			} catch (Exception $e) {
+				$this->Flash->error($e->getMessage());
 			}
 		}
+		$this->set('managers', $this->Employee->find('list', array(
+				'fields' => array('employee_no', 'employyee_name'),
+				'order' => array('Employee.employee_no' => 'ASC'),
+				'recursive' => -1,
+		)));
+		$this->set('departments', $this->Department->find('list', array(
+				'fields' => array('department_no', 'department_name'),
+				'order' => array('Department.department_no' => 'ASC'),
+				'recursive' => -1,
+		)));
 	}
 
 /**
