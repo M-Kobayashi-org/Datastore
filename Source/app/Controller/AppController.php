@@ -37,6 +37,9 @@ class AppController extends Controller {
  *
  * @var array
  */
-	public $components = array('Flash');
+	public $components = array(
+			'Flash',
+			'DebugKit.Toolbar'
+	);
 
 }
