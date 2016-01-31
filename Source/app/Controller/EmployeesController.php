@@ -1,5 +1,8 @@
 <?php
+
 App::uses('AppController', 'Controller');
+App::uses('EmployeeDataStore', 'Model');
+
 /**
  * Employees Controller
  *
@@ -98,6 +101,7 @@ class EmployeesController extends AppController {
 		if (!$this->Employee->exists($id)) {
 			throw new NotFoundException(__('Invalid employee'));
 		}
+		$dataStore = new EmployeeDataStore();
 		if ($this->request->is(array('post', 'put'))) {
 			try {
 				$this->Employee->set('updater', 9999);
@@ -115,8 +119,7 @@ class EmployeesController extends AppController {
 				$this->Flash->error($e->getMessage());
 			}
 		} else {
-			$options = array('conditions' => array('Employee.' . $this->Employee->primaryKey => $id));
-			$this->request->data = $this->Employee->find('first', $options);
+			$this->request->data = $dataStore->retreave('Employee', 'first', array('conditions' => array('Employee.' . $this->Employee->primaryKey => $id)));
 		}
 		$this->set('managers', $this->Employee->find('list', array(
 				'fields' => array('employee_no', 'employyee_name'),

@@ -26,52 +26,82 @@ class DataColumn extends Object {
 
 /****** プロパティ ******/
 
+/**
+ * Field of data
+ *
+ *      isModifyed : Change status
+ *                   - true :  It has been changed
+ *                   - fales : It has not changed
+ *      old :        Before the change of value
+ *      new :        Value after the change
+ *
+ * @var Structure
+ */
 	private $value = array(
 			'isModifyed' => false,
 			'old' => null,
 			'new' => null,
 	);
+/**
+ * Returns whether the field has been changed
+ *
+ * @return boolean  true :  It has been changed
+ *                  fales : It has not changed
+ */
 	public function isModifyed() {
 		return $this->value['isModifyed'];
 	}
+/**
+ * It returns the value before the change
+ *
+ * @return mixed
+ */
 	public function oldValue() {
 		return $this->value['old'];
 	}
-	public function newValue(string $value = null) {
+/**
+ * Set the value of the post-change or returns,
+ *      If the value is specified, then set the specified value
+ *      If the value is not specified, it returns a value that is held
+ *
+ * @param null|mixed $value
+ * @return mixed
+ */
+	public function newValue($value = null) {
 		if (!is_null($value)) {
 			$this->value['new'] = $value;
 			$this->value['isModifyed'] = ($this->value['old'] === $value);
 		}
 		return $this->value['new'];
 	}
-	public function defaultValue(string $value = null) {
+/**
+ * Set the value in the field
+ *      Set the post and before the change to the same value
+ *      Change state will put in the unchanged
+ *
+ * @param string $value
+ */
+	public function defaultValue($value = null) {
 		$this->value['isModifyed'] = false;
 		$this->value['old'] = $this->value['new'] = $value;
+		return $this->value;
 	}
-
-
-
-
-
-
-
 
 
 
 /****** メソッド ******/
 
-	public function __construct(string $value = null) {
+/**
+ * Constructor
+ *
+ * @param mixed $value      Field of data
+ *                          It is set as the initial value
+ */
+	public function __construct($value = null) {
 		parent::__construct();
 
 		$this->defaultValue($value);
 	}
-
-
-
-
-
-
-
 
 
 

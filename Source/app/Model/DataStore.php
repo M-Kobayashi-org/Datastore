@@ -36,9 +36,9 @@ class DataStore extends Object {
  * @return string               Class names that have been registered.
  */
 	private $className = null;
-	public function className(string $className = null) {
-		if (!is_null($className))
-			$this->className = $className;
+	public function className($value = null) {
+		if (!is_null($value))
+			$this->className = $value;
 
 		return $this->className;
 	}
@@ -49,6 +49,13 @@ class DataStore extends Object {
  * @var array $uses
  */
 	public $uses = array();
+
+/**
+ * Model name on which to base.
+ *
+ * @var string $modelName
+ */
+	public $modelName = '';
 
 /**
  * Options for the query
@@ -70,7 +77,7 @@ class DataStore extends Object {
 	public $laterRetreave = true;
 
 
-
+	public $datas = array();
 
 
 
@@ -81,6 +88,7 @@ class DataStore extends Object {
  */
 	public function __construct() {
 		parent::__construct();
+		$this->className(get_class($this));
 		$this->initialize();
 	}
 
@@ -91,24 +99,29 @@ class DataStore extends Object {
  */
 	public function initialize() {
 		// Check propertys
+		if (empty($this->modelName)) {
+			$message = sprintf(__('"%s" property has not been set.'), 'modelName')."\n".__METHOD__.'('.__LINE__.')';
+			$this->log($message, LOG_ERR);
+			throw new Exception($message);
+		}
 		if (empty($this->className)) {
 			$message = sprintf(__('"%s" property has not been set.'), 'className')."\n".__METHOD__.'('.__LINE__.')';
 			$this->log($message, LOG_ERR);
 			throw new Exception($message);
 		}
-		if (!in_array($this->className(), $this->uses)) {
-			$message = sprintf(__('There is no "%s" to the list of models to be used.'), $this->className())."\n".__METHOD__.'('.__LINE__.')';
+		if (!in_array($this->modelName, $this->uses)) {
+			$message = sprintf(__('There is no "%s" to the list of models to be used.'), $this->modelName)."\n".__METHOD__.'('.__LINE__.')';
 			$this->log($message, LOG_WARNING);
 		}
 		// Register the use model class
 		if (empty($this->uses)) {
-			$this->uses = array($this->className());
+			$this->uses = array($this->modelName);
 		}
 		$this->loadModel($this->uses);
 
 		// Extracted from the database
 		if (!$this->laterRetreave)
-			$result = $this->retreave($this->className(), $this->$retreaveOption['type'], $this->$retreaveOption['options']);
+			$result = $this->retreave($this->modelName, $this->$retreaveOption['type'], $this->$retreaveOption['options']);
 
 //		$this->log(array('method' => __FILE__.':'.__LINE__.' '.__METHOD__, '$this->datas' => $this->datas), LOG_DEBUG);
 	}
@@ -139,23 +152,59 @@ class DataStore extends Object {
 			$aliases = $modelNames;
 
 		for ($i = 0; $i < count($modelNames); $i++) {
-			$class = $modelNames[$i];
-			if (!in_array($class, $this->uses)) {
-				$this->uses[] = $class;
-				if (isset($aliases[$i])) {
-					$this->{$aliases[$i]} = new DataTable($this, $class);
-				}
-				else {
-					$this->{$class} = new DataTable($this, $class);
-				}
+			$model = $modelNames[$i];
+			if (!in_array($model, $this->uses)) {
+				$this->uses[] = $model;
+			}
+			$alias = isset($aliases[$i]) ? $aliases[$i] : $model;
+			if (!isset($this->{$alias})) {
+				$this->{$aliases[$i]} = new DataTable($this, $model, $alias);
+
 			}
 		}
 	}
 
+/**
+ * Run the query
+ *
+ * @param string $alias
+ * @param string $type
+ * @param array $options
+ * @param boolean $root
+ * @throws Exception
+ * @return array
+ */
+	public function retreave($alias = null, $type = null, $options = null, $root = null) {
+//		$this->log(array('method' => __FILE__.':'.__LINE__.' '.__METHOD__, '$alias' => $alias, '$type' => $type, '$options' => $options), LOG_DEBUG);
+		if (!is_null($options) && !is_array($options)) {
+			$message = sprintf(__('The %s parameter is not an %s.'), '3th', 'array')."\n".__METHOD__.'('.__LINE__.')';
+			$this->log($message, LOG_ERR);
+			throw new Exception($message);
+		}
+		if (is_null($alias))
+			$alias = $this->className();
 
-	public function retreave(string $alias = null, $type = null, $options = null) {
-		$root = ($this->className() === $alias);
+		if (is_null($root))
+			$root = ($this->className() === $alias);
+		$recursive = -1;
+		if ($root) {
+			if (is_null($type))
+				$type = $this->$retreaveOption['type'];
+			if (is_null($options))
+				$options = $this->$retreaveOption['options'];
+			$recursive = $ghis->{$alias}->recursive;
+		}
+		else {
+			if (is_null($type))
+				$type = 'all';
+			if (is_null($options))
+				$options = array();
+		}
 
+		$result = $this->{$alias}->retreave($type, $options, $recursive, $root);
+
+//		$this->log(array('method' => __FILE__.':'.__LINE__.' '.__METHOD__, '$result' => $result), LOG_DEBUG);
+		return $result;
 	}
 
 
