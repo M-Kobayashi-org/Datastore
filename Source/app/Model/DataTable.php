@@ -51,18 +51,28 @@ class DataTable extends Object {
  *
  * @var string $model
  */
-	private $model = null;
+	private $modelName = null;
 /**
  * Set the model name of the table to which this object is to manage, or returns
  *
  * @param string|null $modelName
  * @return string
  */
-	public function model($modelName = null) {
+	public function modelName($modelName = null) {
 		if (!empty($modelName)) {
-			$this->model = $modelName;
+			$this->modelName = $modelName;
 		}
-		return $this->model;
+		return $this->modelName;
+	}
+
+/**
+ * Set the model name of the table to which this object is to manage, or returns
+ *
+ * @param string|null $modelName
+ * @return string
+ */
+	public function model() {
+		return $this->{$this->modelName};
 	}
 
 /**
@@ -174,7 +184,7 @@ class DataTable extends Object {
 		parent::__construct();
 
 		$this->dataStore($dataStore);
-		$this->model($model);
+		$this->modelName($model);
 		$this->alias($alias);
 
 		$this->{$model} = ClassRegistry::init($model);
@@ -187,7 +197,7 @@ class DataTable extends Object {
  * @return DataRecord|null
  */
 	public function insertRow($record = null) {
-		$this->records[] = new DataRecord($this->{$this->model}, $record);
+		$this->records[] = new DataRecord($this->{$this->modelName()}, $record);
 		$this->recordIndex = count($this->records) - 1;
 		if (0 > $this->recordIndex) {
 			return null;
@@ -226,7 +236,7 @@ class DataTable extends Object {
  * @throws Exception
  * @return array
  */
-	public function retreave($type = null, $options = null, $recursive = null, $root = false) {
+	public function retreave($type = null, $options = null, &$recursive = null, $root = false) {
 		if (is_null($type)) {
 			$message = sprintf(__('The %s parameter is not set.'), '1st')."\n".__METHOD__.'('.__LINE__.')';
 			$this->log($message, LOG_ERR);
@@ -247,16 +257,16 @@ class DataTable extends Object {
 		$serialize = serialize($options);
 		if ($this->isExtracted($serialize) === QueryStatus::Extracted()) {
 			// キャッシュバッファから取得
-			$results = array($alias => array());
+			$results = array();
 			foreach ($this->caches[$serialize] as $index) {
 				$dataRecord = $this->records[$index];
-				$record[$alias] = $dataRecord->getValue();
-				$results += $record;
+				$record[$this->alias] = $dataRecord->getValue();
+				$results[] = $record;
 			}
 		}
 		else {
 			// DBから取得
-			$Model = $this->{$this->model()};
+			$Model = $this->{$this->modelName()};
 			$options['recursive'] = -1;
 			$results = $Model->find($type, $options);
 			if (!is_null($results) && is_array($results) && count($results)) {
@@ -284,63 +294,95 @@ class DataTable extends Object {
 		// アソシエーションを解析してデータを取得する
 		if ($recursive >= 0) {
 			$recursive--;
-			$ds = $this->dataStore();
-			foreach (($ds->{$this->alias()}->belongsTo + $ds->{$this->alias()}->hasAndBelongsToMany) as $alias => $association) {
-				$Model = $ds->{$alias};
-				$options = array('recursive' => -1);
-				// Set find method parameters from association
-				if (isset($association['fields']))
-					$options += array('fields' => $association['fields']);
-				if (isset($association['order']))
-					$options += array('order' => $association['order']);
+			if (!empty($results)) {
+				// Determine whether multiple records are extracted
+				$isMulti = false;
+				$keys = array_keys($results);
+				if (is_numeric($keys[0])) {
+					$isMulti = true;
+				}
 
-				if (!empty($results) && isset($association['foreignKey'])) {
-					if (!is_array($association['foreignKey'])) {
-						$association['foreignKey'] = array($association['foreignKey'],);
-					}		// if (!is_array($association['foreignKey']))
-					foreach ($results as $i => &$records) {
-						if (is_numeric($i))
-							$record = $records[$i];
-						else
-							$record = $records;
+				$dataStore = $this->dataStore();
+				$Model = $this->model();
 
-						// Set conditions parameter
-						if (isset($association['conditions']))
-							$options['conditions'] = $association['conditions'];
-						else		// if (isset($association['conditions']))
-							$options['conditions'] = array();
-
-						$foreignKeys = array();
-						foreach ($association['foreignKey'] as $key) {
-							//$this->log(array('method' => __FILE__.':'.__LINE__.' '.__METHOD__, '$result' => $result, '$key' => $key, '$record' => $record), LOG_DEBUG);
-							$foreignKeys += array($key => $record[$key]);
+				if ($isMulti) {
+					foreach ($results as $index => &$records) {
+						$aliases = array_keys($records);
+						foreach ($aliases as $alias) {
+							$records += $this->rtreaveBelongsTos($Model, $dataStore, $records[$alias]);
 						}
-						//$this->log(array('method' => __FILE__.':'.__LINE__.' '.__METHOD__, '$foreignKeys' => $foreignKeys), LOG_DEBUG);
-						$primaryKey = $Model->primaryKey;
-						if (!is_array($primaryKey))
-							$primaryKey = array($primaryKey);
-						$keys = array();
-						foreach ($primaryKey as $key) {
-							$keys[] = $alias.'.'.$key;
-						}
-						$values = array();
-						foreach ($foreignKeys as $key => $val) {
-							$values[] = '('.join(', ', $val) . ')';
-						}
-						$options['conditions'][] = array(
-								'('.jaoin(', ', $keys).')' => array_unique($values),
-						);
-
-						$result = $ds->{$alias}->retreave('all', $options, $recursive, false);
-						foreach ($result as $i => $value) {
-							$records[$alias] = $value[$alias];
-						}
-					}		// foreach ($results as $i => &$record)
-				}			// if (!empty($results) && isset($association['foreignKey']))
-			}				// foreach (($ds->{$this->alias()}->belongsTo + $ds->{$this->alias()}->hasAndBelongsToMany) as $alias => $association)
-		}					// if ($recursive >= 0)
+					}			// foreach ($results as $index => $records)
+					unset($records);
+				} else {		// if ($isAll)
+					$aliases = array_keys($results);
+					foreach ($aliases as $alias) {
+						$results += $this->rtreaveBelongsTos($Model, $dataStore, $results[$alias]);
+					}
+				}				// if ($isAll)
+			}					// if (!empty($results))
+		}						// if ($recursive >= 0)
 
 		return $results;
+	}
+
+	private function rtreaveBelongsTos($Model, $dataStore, $record) {
+		$results = array();
+		foreach (($Model->belongsTo + $Model->hasAndBelongsToMany) as $alias => $association) {
+			if (!isset($dataStore->{$alias})) {
+				$dataStore->loadModel($association['className'], $alias);
+			}
+			$options = array('recursive' => -1);
+			// Set find method parameters from association
+			if (isset($association['fields']))
+				$options += array('fields' => $association['fields']);
+			if (isset($association['order']))
+				$options += array('order' => $association['order']);
+
+			if (isset($association['foreignKey'])) {
+				if (!is_array($association['foreignKey'])) {
+					$association['foreignKey'] = array($association['foreignKey'],);
+				}				// if (!is_array($association['foreignKey']))
+
+				$this->nextRetreave($association, $options, $record, $alias);
+				if ($result = $dataStore->{$alias}->retreave('first', $options, $options['recursive'], false)) {
+					$results[$alias] = $result[$association['className']];
+				} else {
+					$schemas = array();
+					foreach (array_keys($dataStore->{$alias}->{$association['className']}->_schema) as $fieldName) {
+						$schemas[$fieldName] = null;
+					}
+					$results[$alias] = $schemas;
+				}
+			}					// if (!empty($results) && isset($association['foreignKey']))
+		}						// foreach (($ds->{$this->alias()}->belongsTo + $ds->{$this->alias()}->hasAndBelongsToMany) as $alias => $association)
+		return $results;
+	}
+
+	private function nextRetreave($association, &$options, $record, $alias) {
+		$Model = $this->dataStore()->{$alias}->model();
+
+		// Set conditions parameter
+		if (isset($association['conditions']))
+			$options['conditions'] = $association['conditions'];
+		else		// if (isset($association['conditions']))
+			$options['conditions'] = array();
+
+		$primaryKey = $Model->primaryKey;
+		if (!is_array($primaryKey))
+			$primaryKey = array($primaryKey);
+		$keys = array();
+		foreach ($primaryKey as $key) {
+			$keys[] = $association['className'].'.'.$key;
+		}
+
+		$vals = array();
+		foreach ($association['foreignKey'] as $key) {
+			$vals[] = $record[$key];
+		}
+
+		for ($i = 0; $i < count($keys); $i++) {
+			$options['conditions'][] = array( $keys[$i] => $vals[$i],);
+		}
 	}
 
 /**

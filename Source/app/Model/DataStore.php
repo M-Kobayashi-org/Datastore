@@ -35,12 +35,12 @@ class DataStore extends Object {
  *
  * @return string               Class names that have been registered.
  */
-	private $className = null;
-	public function className($value = null) {
+	private $modelName = null;
+	public function modelName($value = null) {
 		if (!is_null($value))
-			$this->className = $value;
+			$this->modelName = $value;
 
-		return $this->className;
+		return $this->modelName;
 	}
 
 /**
@@ -49,13 +49,6 @@ class DataStore extends Object {
  * @var array $uses
  */
 	public $uses = array();
-
-/**
- * Model name on which to base.
- *
- * @var string $modelName
- */
-	public $modelName = '';
 
 /**
  * Options for the query
@@ -85,27 +78,28 @@ class DataStore extends Object {
 
 /**
  * Constructor
+ *
+ * @return void
  */
 	public function __construct() {
 		parent::__construct();
-		$this->className(get_class($this));
+		if (is_null($this->modelName)) {
+			$className = preg_replace('/DataStore\Z/', '', get_class($this));
+			$this->modelName($className);
+		}
 		$this->initialize();
 	}
 
 /**
  * Initialization
  *
+ * @param array $data
  * @return void
  */
 	public function initialize() {
 		// Check propertys
 		if (empty($this->modelName)) {
 			$message = sprintf(__('"%s" property has not been set.'), 'modelName')."\n".__METHOD__.'('.__LINE__.')';
-			$this->log($message, LOG_ERR);
-			throw new Exception($message);
-		}
-		if (empty($this->className)) {
-			$message = sprintf(__('"%s" property has not been set.'), 'className')."\n".__METHOD__.'('.__LINE__.')';
 			$this->log($message, LOG_ERR);
 			throw new Exception($message);
 		}
@@ -121,7 +115,7 @@ class DataStore extends Object {
 
 		// Extracted from the database
 		if (!$this->laterRetreave)
-			$result = $this->retreave($this->modelName, $this->$retreaveOption['type'], $this->$retreaveOption['options']);
+			$this->retreave($this->modelName, $this->$retreaveOption['type'], $this->$retreaveOption['options']);
 
 //		$this->log(array('method' => __FILE__.':'.__LINE__.' '.__METHOD__, '$this->datas' => $this->datas), LOG_DEBUG);
 	}
@@ -137,19 +131,26 @@ class DataStore extends Object {
 //		$this->log(array('method' => __FILE__.':'.__LINE__.' '.__METHOD__, '$modelNames' => $modelNames), LOG_DEBUG);
 
 		if (is_null($modelNames)) {
-			$message = sprintf(__('The %s parameter is not set.'), '1st')."\n".__METHOD__.'('.__LINE__.')';
+			$message = __('The %s parameter is not set.', '1st')."\n".__METHOD__.'('.__LINE__.')';
 			$this->log($message, LOG_ERR);
 			throw new Exception($message);
 		}
 
-		if (!is_array($modelNames)) {
+		if (!is_array($modelNames))
 			$modelNames = array($modelNames);
-		}
 		if (!count($modelNames))
 			return;
 
 		if (is_null($aliases))
 			$aliases = $modelNames;
+		if (!is_array($aliases))
+			$aliases = array($aliases);
+
+		if (count($modelNames) !== count($aliases)) {
+			$message = __('Different number of "%s" and "%s".', 'classNames', 'aliases')."\n".__METHOD__.'('.__LINE__.')';
+			$this->log($message, LOG_ERR);
+			throw new Exception($message);
+		}
 
 		for ($i = 0; $i < count($modelNames); $i++) {
 			$model = $modelNames[$i];
@@ -158,8 +159,7 @@ class DataStore extends Object {
 			}
 			$alias = isset($aliases[$i]) ? $aliases[$i] : $model;
 			if (!isset($this->{$alias})) {
-				$this->{$aliases[$i]} = new DataTable($this, $model, $alias);
-
+				$this->{$alias} = new DataTable($this, $model, $alias);
 			}
 		}
 	}
@@ -182,17 +182,18 @@ class DataStore extends Object {
 			throw new Exception($message);
 		}
 		if (is_null($alias))
-			$alias = $this->className();
+			$alias = $this->modelName();
 
 		if (is_null($root))
-			$root = ($this->className() === $alias);
+			$root = ($this->modelName() === $alias);
 		$recursive = -1;
 		if ($root) {
 			if (is_null($type))
 				$type = $this->$retreaveOption['type'];
 			if (is_null($options))
 				$options = $this->$retreaveOption['options'];
-			$recursive = $ghis->{$alias}->recursive;
+			$Model = $this->{$alias}->model();
+			$recursive = $Model->recursive;
 		}
 		else {
 			if (is_null($type))
@@ -206,7 +207,6 @@ class DataStore extends Object {
 //		$this->log(array('method' => __FILE__.':'.__LINE__.' '.__METHOD__, '$result' => $result), LOG_DEBUG);
 		return $result;
 	}
-
 
 
 

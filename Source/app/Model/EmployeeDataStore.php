@@ -24,7 +24,7 @@ class EmployeeDataStore extends DataStore {
  *
  * @var string $modelName
  */
-	public $modelName = 'Employee';
+//	public $modelName = 'Employee';
 
 
 }
