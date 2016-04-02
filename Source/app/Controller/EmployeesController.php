@@ -16,7 +16,10 @@ class EmployeesController extends AppController {
  *
  * @var array
  */
-	public $components = array('Paginator');
+	public $components = array(
+			'Paginator',
+			'Session',
+	);
 
 	public $uses = array('Employee', 'Department');
 
@@ -101,9 +104,10 @@ class EmployeesController extends AppController {
 		if (!$this->Employee->exists($id)) {
 			throw new NotFoundException(__('Invalid employee'));
 		}
-		$dataStore = new EmployeeDataStore();
+		$dataStore = null;
 		if ($this->request->is(array('post', 'put'))) {
 			try {
+				$dataStore = $this->Session->read(__METHOD__);
 				$this->Employee->set('updater', 9999);
 				if (!$this->Employee->save($this->request->data)) {
 					throw new Exception(
@@ -114,12 +118,16 @@ class EmployeesController extends AppController {
 							);
 				}
 				$this->Flash->success(__('The employee has been saved.'));
+				$this->Session->delete(__METHOD__);
 				return $this->redirect(array('action' => 'index'));
 			} catch (Exception $e) {
 				$this->Flash->error($e->getMessage());
 			}
 		} else {
-			$this->request->data = $dataStore->retreave('Employee', 'first', array('conditions' => array('Employee.' . $this->Employee->primaryKey => $id)));
+			$dataStore = new EmployeeDataStore();
+			$data = $dataStore->retreave('Employee', 'first', array('conditions' => array('Employee.' . $this->Employee->primaryKey => $id)));
+			$this->request->data = $data;
+			$this->Session->write(__METHOD__, serialize($dataStore));
 		}
 		$this->set('managers', $this->Employee->find('list', array(
 				'fields' => array('employee_no', 'employyee_name'),
