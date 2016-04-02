@@ -106,7 +106,7 @@ class Employee extends AppModel {
 //					'counterCache' => false,
 //					'counterScope' => '',
 			),
-			'Parent' => array(
+			'Manager' => array(
 					'className' => 'Employee',
 					'foreignKey' => 'manager',
 //					'conditions' => '',

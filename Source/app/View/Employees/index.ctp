@@ -24,7 +24,7 @@
 		<td><?php echo h($employee['Employee']['employee_no']); ?>&nbsp;</td>
 		<td><?php echo h($employee['Employee']['employyee_name']); ?>&nbsp;</td>
 		<td><?php echo h($employee['Employee']['job']); ?>&nbsp;</td>
-		<td><?php echo h($employee['Parent']['employyee_name']); ?>&nbsp;</td>
+		<td><?php echo h($employee['Manager']['employyee_name']); ?>&nbsp;</td>
 		<td><?php echo h($employee['Employee']['hiring_date']); ?>&nbsp;</td>
 		<td><?php echo h($employee['Employee']['salary']); ?>&nbsp;</td>
 		<td><?php echo h($employee['Employee']['commission']); ?>&nbsp;</td>
