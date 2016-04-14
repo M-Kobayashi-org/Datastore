@@ -344,14 +344,15 @@ class DataTable extends Object {
 				}				// if (!is_array($association['foreignKey']))
 
 				$this->nextRetreave($association, $options, $record, $alias);
-				if ($result = $dataStore->{$alias}->retreave('first', $options, $options['recursive'], false)) {
-					$results[$alias] = $result[$association['className']];
-				} else {
+				$result = $dataStore->{$alias}->retreave('first', $options, $options['recursive'], false);
+				if (empty($result)) {
 					$schemas = array();
 					foreach (array_keys($dataStore->{$alias}->{$association['className']}->_schema) as $fieldName) {
 						$schemas[$fieldName] = null;
 					}
 					$results[$alias] = $schemas;
+				} else {
+					$results[$alias] = $result[$association['className']];
 				}
 			}					// if (!empty($results) && isset($association['foreignKey']))
 		}						// foreach (($ds->{$this->alias()}->belongsTo + $ds->{$this->alias()}->hasAndBelongsToMany) as $alias => $association)
