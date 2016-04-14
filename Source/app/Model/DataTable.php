@@ -310,6 +310,10 @@ class DataTable extends Object {
 						$aliases = array_keys($records);
 						foreach ($aliases as $alias) {
 							$records += $this->rtreaveBelongsTos($Model, $dataStore, $records[$alias]);
+							$result = $this->rtreaveHasManyos($Model, $dataStore, $results[$alias]);
+							if (!empty($result)) {
+								$results[$alias] += $result;
+							}
 						}
 					}			// foreach ($results as $index => $records)
 					unset($records);
@@ -317,6 +321,10 @@ class DataTable extends Object {
 					$aliases = array_keys($results);
 					foreach ($aliases as $alias) {
 						$results += $this->rtreaveBelongsTos($Model, $dataStore, $results[$alias]);
+						$result = $this->rtreaveHasManyos($Model, $dataStore, $results[$alias]);
+						if (!empty($result)) {
+							$results[$alias] += $result;
+						}
 					}
 				}				// if ($isAll)
 			}					// if (!empty($results))
@@ -343,7 +351,7 @@ class DataTable extends Object {
 					$association['foreignKey'] = array($association['foreignKey'],);
 				}				// if (!is_array($association['foreignKey']))
 
-				$this->nextRetreave($association, $options, $record, $alias);
+				$this->nextBelongsTo($association, $options, $record, $alias);
 				$result = $dataStore->{$alias}->retreave('first', $options, $options['recursive'], false);
 				if (empty($result)) {
 					$schemas = array();
@@ -359,7 +367,7 @@ class DataTable extends Object {
 		return $results;
 	}
 
-	private function nextRetreave($association, &$options, $record, $alias) {
+	private function nextBelongsTo($association, &$options, $record, $alias) {
 		$Model = $this->dataStore()->{$alias}->model();
 
 		// Set conditions parameter
@@ -378,6 +386,63 @@ class DataTable extends Object {
 
 		$vals = array();
 		foreach ($association['foreignKey'] as $key) {
+			$vals[] = $record[$key];
+		}
+
+		for ($i = 0; $i < count($keys); $i++) {
+			$options['conditions'][] = array( $keys[$i] => $vals[$i],);
+		}
+	}
+
+	private function rtreaveHasManyos($Model, $dataStore, $record) {
+		$results = array();
+		foreach (($Model->hasMany + $Model->hasAndBelongsToMany) as $alias => $association) {
+			if (!isset($dataStore->{$alias})) {
+				$dataStore->loadModel($association['className'], $alias);
+			}
+			$options = array('recursive' => -1);
+			// Set find method parameters from association
+			if (isset($association['fields']))
+				$options += array('fields' => $association['fields']);
+			if (isset($association['order']))
+				$options += array('order' => $association['order']);
+
+			if (isset($association['foreignKey'])) {
+				if (!is_array($association['foreignKey'])) {
+					$association['foreignKey'] = array($association['foreignKey'],);
+				}				// if (!is_array($association['foreignKey']))
+
+				$this->nextHasManyo($association, $options, $record, $alias);
+				$result = $dataStore->{$alias}->retreave('all', $options, $options['recursive'], false);
+				if (!empty($result)) {
+					foreach ($result as $row) {
+						$results[] = $row[$association['className']];
+					}
+				}
+			}					// if (!empty($results) && isset($association['foreignKey']))
+		}						// foreach (($ds->{$this->alias()}->belongsTo + $ds->{$this->alias()}->hasAndBelongsToMany) as $alias => $association)
+		return $results;
+	}
+
+	private function nextHasManyo($association, &$options, $record, $alias) {
+		$Model = $this->dataStore()->{$alias}->model();
+
+		// Set conditions parameter
+		if (isset($association['conditions']))
+			$options['conditions'] = $association['conditions'];
+		else		// if (isset($association['conditions']))
+			$options['conditions'] = array();
+
+		$primaryKey = $Model->primaryKey;
+		if (!is_array($primaryKey))
+			$primaryKey = array($primaryKey);
+		$keys = array();
+		foreach ($association['foreignKey'] as $key) {
+			$keys[] = $association['className'].'.'.$key;
+		}
+
+		$vals = array();
+		foreach ($primaryKey as $key) {
 			$vals[] = $record[$key];
 		}
 
